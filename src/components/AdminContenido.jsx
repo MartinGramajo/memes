@@ -1,14 +1,18 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { Button, Form, Spinner, Table } from "react-bootstrap";
-import { ID } from "../utils/id";
-import { guardarEnLocalStorage } from "../utils/localStorage";
+import { leerDeLocalStorage } from "../utils/localStorage";
+
+
+const tokenLocal = leerDeLocalStorage("token") || {};
+
 
 export default function AdminContenido(props) {
   const { memes, setMemes } = props;
   const [validated, setValidated] = useState(false);
   const [input, setInput] = useState({ titulo: "", imagen: "" });
   const [isLoading, setIsLoading] = useState(false);
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -23,7 +27,8 @@ export default function AdminContenido(props) {
 
       //Forma correcta en react, crear un nuevo array, copiando los elementos previos.
       setIsLoading(true);
-      await axios.post("http://localhost:4000/api/memes", input);
+      const headers = { 'x-auth-token': tokenLocal.token };
+      await axios.post("http://localhost:4000/api/memes", input, {headers});
       
       // consultamos nuevamente el api con el meme cargado y setteamos en Memes
       const response = await axios.get('http://localhost:4000/api/memes');
