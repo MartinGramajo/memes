@@ -1,0 +1,11 @@
+/*Css aplicado al Footer*/
+.footer-fix{
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/*css aplicado al formulario crear meme*/
+.form-admin{
+  width: 75%;
+}
