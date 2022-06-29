@@ -12,6 +12,9 @@ export default function Meme(props) {
         <Card.Body>
           <Card.Title>{props.meme.titulo}</Card.Title>
           {/* <span>{props.meme.publishDate}</span> */}
+          {/* <span>Creador: {props.meme.creador?.name}</span> */}
+          {/* <span>{props.meme.creador &&' Creador:' + ' ' + props.meme.creador.name}</span> */}
+          {props.meme.creador && <span> Creador: {props.meme.creador?.name}</span>}
         </Card.Body>
         <Button as={NavLink} to={`/meme/${props.meme.id}`}> Ver detalle </Button>
       </Card>
