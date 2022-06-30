@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { Spinner } from 'react-bootstrap';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Footer from './components/Footer';
@@ -13,24 +14,31 @@ import Register from './Pages/Register';
 import { leerDeLocalStorage } from './utils/localStorage';
 
 // const memesLocal = leerDeLocalStorage("memes") || [];
-const tokenLocal = leerDeLocalStorage("token") || {};
+
 
 function App() {
 
   const [memes, setMemes] = useState([]);
-  console.log("file: App.js ~ line 20 ~ App ~ memes", memes)
   const [user, setUser] = useState({})
+  const [isLoading, setIsLoading] = useState(true)
 
 
   // Consulta Api para traer la info del usuario en el login. 
-  useEffect(() => {
-    if (!tokenLocal.token) return;
-    const request = async () => {
+  const requestUserData = async () => {
+    setIsLoading(true) // state para mostrar que vamos a esperar por los datos de la consulta. 
+    // para evitar el 404 al loguearse
+    const tokenLocal = leerDeLocalStorage("token") || {};
+    // Modificamos para que se ejecute solo si existe un token
+    if (tokenLocal.token) {
       const headers = { 'x-auth-token': tokenLocal.token };
       const response = await axios.get('http://localhost:4000/api/auth', { headers });
       setUser(response.data) // setteamos la info de nuestro usuario. 
     }
-    request()
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    requestUserData()
   }, [])
 
   // Condicional para autorizar al user a que pagina va a poder acceder. 
@@ -45,11 +53,20 @@ function App() {
     request()
   }, [])
 
+  // condicional para evitar el error 404 en las rutas privadas 
+  if (isLoading) {
+    return <>
+      Cargando...
+      <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+    </>
+  }
 
   return (
     <div className="footer-fix" >
       <BrowserRouter>
-        <NavReact user={user} />
+        <NavReact user={user}  />
         <Routes>
           <Route
             path="/"
@@ -66,7 +83,7 @@ function App() {
 
           <Route
             path="/login"
-            element={<Login />}
+            element={<Login requestUserData={requestUserData} />}
           />
 
           <Route
