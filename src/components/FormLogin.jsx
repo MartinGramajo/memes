@@ -4,8 +4,7 @@ import { Form, Row, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { guardarEnLocalStorage } from "../utils/localStorage";
 
-
-export default function FormLogin({ setUser }) {
+export default function FormLogin({ setUser,requestUserData }) {
   const [validated, setValidated] = useState(false);
   const [input, setInput] = useState({ email: "", password: "" });
   const navigate = useNavigate(); //el equivalente de useHistory en react-router-dom v6
@@ -31,12 +30,14 @@ export default function FormLogin({ setUser }) {
           input
         );
         // guardamos los datos del response en una variable (desestructuramos)
-        const {token, name, register} = response.data;
+        const { token, name, register } = response.data;
         //guardamos el token en el localstorage
         guardarEnLocalStorage({ key: "token", value: { token } });
         alert("bienvenido " + name + " " + register);
         //Navigate redirecciona a la pantalla indicada en el paramentro.
-        navigate("/");
+        requestUserData();
+        navigate("/admin");
+        window.location.reload();
       } catch (error) {
         console.log(error);
         // Con esta condición traemos los datos de los check/validaciones
