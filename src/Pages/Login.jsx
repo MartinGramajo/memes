@@ -1,9 +1,9 @@
-import FormLogin from '../components/FormLogin'
+import FormLogin from "../components/FormLogin";
 
-export default function Login({setUser}) {
+export default function Login({ setUser,requestUserData }) {
   return (
-    <div >
-      <FormLogin setUser={setUser} />
+    <div>
+      <FormLogin setUser={setUser} requestUserData={requestUserData} />
     </div>
-  )
+  );
 }
