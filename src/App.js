@@ -45,12 +45,13 @@ function App() {
   const isAdmin = user.role === 'admin'
 
   // consulta Api para traer los memes
+  const getMemes = async () => {
+    const response = await axios.get('http://localhost:4000/api/memes');
+    setMemes(response.data) // setteamos la info de nuestro usuario. 
+  }
+
   useEffect(() => {
-    const request = async () => {
-      const response = await axios.get('http://localhost:4000/api/memes');
-      setMemes(response.data) // setteamos la info de nuestro usuario. 
-    }
-    request()
+    getMemes()
   }, [])
 
   // condicional para evitar el error 404 en las rutas privadas 
@@ -97,7 +98,7 @@ function App() {
           {/* condicional para ruta privada  */}
           {isAdmin && <Route
             path="/admin"
-            element={<Admin memes={memes} setMemes={setMemes} user={user} />}
+            element={<Admin getMemes={getMemes} memes={memes} setMemes={setMemes} user={user} />}
           />}
           <Route
             path="*"

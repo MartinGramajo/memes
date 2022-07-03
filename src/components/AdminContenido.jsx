@@ -1,131 +1,164 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { Button, Form, Spinner, Table } from "react-bootstrap";
+import { Button, Form, Image, Modal, Spinner, Table } from "react-bootstrap";
 import { leerDeLocalStorage } from "../utils/localStorage";
-
-
-const tokenLocal = leerDeLocalStorage("token") || {};
-
+import FormCrearMeme from "./FormCrearMeme";
 
 export default function AdminContenido(props) {
-  const { memes, setMemes } = props;
-  const [validated, setValidated] = useState(false);
-  const [input, setInput] = useState({ titulo: "", imagen: "" });
-  const [isLoading, setIsLoading] = useState(false);
+  const { memes, setMemes, getMemes } = props;
+  const [currentMeme, setCurrentMeme] = useState({});
+  const handleClose = () => setIsVisible(false);
+  const handleShow = () => setIsVisible(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
 
+  // función para eliminar meme
+  const deleteMeme = async (id) => {
+    setIsLoadingDelete(true);
+    const tokenLocal = leerDeLocalStorage("token") || {}; // traemos el token para estar autorizado para el borrado.
+    const headers = { "x-auth-token": tokenLocal.token }; // lo guardamos en una variable y lo pasamos por parametro a la consulta.
+    await axios.delete(`http://localhost:4000/api/memes/${id}`, { headers }); // concatenamos el id a la ruta para seleccionar un meme en particular para borrar.
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setValidated(true);
-    const form = event.currentTarget;
+    // consultamos nuevamente el api para actualizar el listado de memes con el meme borrado.
+    await getMemes();
+    setIsLoadingDelete(false);
+  };
 
-    // Chequea que los campos del formulario sean validos.
-    if (form.checkValidity() === true) {
-      // Forma incorrecta de actualizar un array, mutando un objeto
-      // memes.push(input); // esto no hace un nuevo render del component.
-
-      //Forma correcta en react, crear un nuevo array, copiando los elementos previos.
-      setIsLoading(true);
-      const headers = { 'x-auth-token': tokenLocal.token };
-      await axios.post("http://localhost:4000/api/memes", input, {headers});
-      
-      // consultamos nuevamente el api con el meme cargado y setteamos en Memes
-      const response = await axios.get('http://localhost:4000/api/memes');
-      setMemes(response.data) // setteamos la info de nuestro usuario. 
-      
-      setIsLoading(false);
-      form.reset();
-      setValidated(false);
-    }
+  // funcion para editar meme
+  const editMeme = (meme) => {
+    handleShow();
+    setCurrentMeme(meme);
   };
 
   const handleChange = (e) => {
-    // Extraemos y guardamos en variables, el nombre y el valor del input
-    // Otra forma de extraerlo
-    // const inputHtml = e.target;
-    // const name = inputHtml.name;
-    // const value = inputHtml.value;
-
     const { value, name } = e.target;
+    const updateMeme = { ...currentMeme, [name]: value };
+    setCurrentMeme(updateMeme);
+  };
 
-    // Declaramos un objeto que contiene una copia de las propiedades del state
-    // mas el dato nuevo ingresado usando el name y el value del elemento.
-    const newInput = { ...input, [name]: value };
-    //con ese elemento actualizamos el estado.
-    setInput(newInput);
-    //Forma simplificada
-    //setInput({ ...input, [name]: value });
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
+    setIsLoadingEdit(true)
+    const tokenLocal = leerDeLocalStorage("token") || {};
+    const headers = { "x-auth-token": tokenLocal.token };
+    await axios.put(`http://localhost:4000/api/memes/${currentMeme._id}`, currentMeme, { headers });
+    await getMemes();
+    setIsLoadingEdit(false)
+    handleClose()
   };
 
   return (
     <div className="container p-5">
-      <h2 className="mt-5  text-center">Formulario para crear momos</h2>
-      <Form
-        className="card p-5 m-auto mt-5 form-admin"
-        noValidate
-        validated={validated}
-        onSubmit={handleSubmit}
-      >
-        <Form.Group className="mb-3" controlId="titulo">
-          <Form.Label>Titulo</Form.Label>
-          <Form.Control
-            required
-            name="titulo"
-            type="text"
-            placeholder="Meme"
-            onChange={handleChange}
-          />
-          <Form.Control.Feedback>Datos correctos</Form.Control.Feedback>
-          <Form.Control.Feedback type="invalid">
-            Por favor verifica tu comedia.
-          </Form.Control.Feedback>
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="imagen">
-          <Form.Label>Imagen</Form.Label>
-          <Form.Control
-            required
-            name="imagen"
-            type="text"
-            placeholder="http://example.com"
-            onChange={handleChange}
-          />
-          <Form.Control.Feedback>Comedia aceptada</Form.Control.Feedback>
-          <Form.Control.Feedback type="invalid">
-            Tu comedia no es lo suficientemente prendida para esta App.
-          </Form.Control.Feedback>
-        </Form.Group>
-        <Button className="mx-auto" type="submit" disable={isLoading}>
-          Crear Meme
-          { isLoading &&<Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>}
-        </Button>
-      </Form>
-      <Table
-        className="mx-auto mt-5"
-        style={{ width: "600px" }}
-        striped
-        bordered
-        hover
-      >
-        <tbody>
-          {memes.length === 0
-            ? " No hay memes guardados"
-            : memes.map((meme, id) => (
-                <tr key={id}>
-                  <td>
-                    <img
-                      src={meme.imagen}
-                      alt=""
-                      style={{ width: "5rem" }}
-                    ></img>
-                  </td>
-                  <td>{meme.titulo}</td>
-                </tr>
-              ))}
-        </tbody>
-      </Table>
+      <FormCrearMeme setMemes={setMemes} />
+      <div className="position-relative">
+        <Table
+          className="mx-auto mt-5 "
+          style={{ width: "600px" }}
+          striped
+          bordered
+          hover
+        >
+          <tbody>
+            {memes.length === 0
+              ? " No hay memes guardados"
+              : memes.map((meme, i) => (
+                  <tr key={i}>
+                    <td>
+                      <img
+                        src={meme.imagen}
+                        alt=""
+                        style={{ width: "5rem" }}
+                      ></img>
+                    </td>
+                    <td>{meme.titulo}</td>
+                    <td>
+                      {" "}
+                      <Button
+                        onClick={() => deleteMeme(meme._id)}
+                        variant="none"
+                      >
+                        {" "}
+                        <Image
+                          src="https://icongr.am/clarity/eraser.svg?size=26&color=ff0000"
+                          alt="icono eliminar"
+                        />{" "}
+                      </Button>
+                      <Button onClick={() => editMeme(meme)} variant="none">
+                        {" "}
+                        <Image
+                          src="https://icongr.am/clarity/edit.svg?size=26&color=currentColor"
+                          alt="icono editar"
+                        />{" "}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+          </tbody>
+        </Table>
+        {isLoadingDelete && (
+          <div
+            style={{ backgroundColor: "#00000017" }}
+            className="position-absolute top-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          >
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        )}
+
+        <Modal
+          show={isVisible}
+          onHide={handleClose}
+          backdrop="static"
+          keyboard={false}
+        >
+          <Form onSubmit={handleSubmitEdit}>
+            <Modal.Header closeButton>
+              <Modal.Title>Editar Meme</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group className="mb-3" controlId="titulo">
+                <Form.Label>Titulo</Form.Label>
+                <Form.Control
+                  required
+                  name="titulo"
+                  value={currentMeme.titulo} // valor o input controlado. 
+                  type="text"
+                  placeholder="Meme"
+                  onChange={handleChange}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="imagen">
+                <Form.Label>Imagen</Form.Label>
+                <Form.Control
+                  required
+                  name="imagen"
+                  value={currentMeme.imagen}
+                  type="text"
+                  placeholder="http://example.com"
+                  onChange={handleChange}
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer className="d-flex justify-content-between">
+              <Button type="button" variant="secondary" onClick={handleClose}>
+                Cerrar
+              </Button>
+              <Button type="submit" disable={isLoadingEdit}>
+                Guardar Cambios
+                {isLoadingEdit && (
+                  <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </Spinner>
+                )}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+
+    
+      </div>
     </div>
   );
 }
