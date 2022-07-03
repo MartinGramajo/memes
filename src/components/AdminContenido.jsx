@@ -39,13 +39,17 @@ export default function AdminContenido(props) {
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
-    setIsLoadingEdit(true)
+    setIsLoadingEdit(true);
     const tokenLocal = leerDeLocalStorage("token") || {};
     const headers = { "x-auth-token": tokenLocal.token };
-    await axios.put(`http://localhost:4000/api/memes/${currentMeme._id}`, currentMeme, { headers });
+    await axios.put(
+      `http://localhost:4000/api/memes/${currentMeme._id}`,
+      currentMeme,
+      { headers }
+    );
     await getMemes();
-    setIsLoadingEdit(false)
-    handleClose()
+    setIsLoadingEdit(false);
+    handleClose();
   };
 
   return (
@@ -123,7 +127,7 @@ export default function AdminContenido(props) {
                 <Form.Control
                   required
                   name="titulo"
-                  value={currentMeme.titulo} // valor o input controlado. 
+                  value={currentMeme.titulo} // valor o input controlado.
                   type="text"
                   placeholder="Meme"
                   onChange={handleChange}
@@ -156,8 +160,6 @@ export default function AdminContenido(props) {
             </Modal.Footer>
           </Form>
         </Modal>
-
-    
       </div>
     </div>
   );
